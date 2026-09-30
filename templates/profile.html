@@ -1,0 +1,255 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ profile_user.username }} - Connectly</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        Connectly
+    </div>
+
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+
+        {% if user.is_authenticated %}
+
+            <a href="{% url 'profile' user.username %}">
+                My Profile
+            </a>
+
+            <a href="{% url 'logout' %}">
+                Logout
+            </a>
+
+        {% else %}
+
+            <a href="{% url 'login' %}">
+                Login
+            </a>
+
+            <a href="{% url 'register' %}">
+                Register
+            </a>
+
+        {% endif %}
+
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <section class="profile-card">
+
+        {% if profile.avatar %}
+
+            <img
+                src="{{ profile.avatar }}"
+                class="avatar"
+                alt="Profile picture"
+            >
+
+        {% else %}
+
+            <div class="avatar-placeholder">
+                {{ profile_user.username|first|upper }}
+            </div>
+
+        {% endif %}
+
+
+        <h1>
+            @{{ profile_user.username }}
+        </h1>
+
+
+        {% if profile_user.first_name or profile_user.last_name %}
+
+            <h3>
+                {{ profile_user.first_name }}
+                {{ profile_user.last_name }}
+            </h3>
+
+        {% endif %}
+
+
+        {% if profile.bio %}
+
+            <p class="bio">
+                {{ profile.bio }}
+            </p>
+
+        {% else %}
+
+            <p class="bio">
+                No bio yet.
+            </p>
+
+        {% endif %}
+
+
+        <div class="profile-stats">
+
+            <div>
+                <strong>{{ posts.count }}</strong>
+                <span>Posts</span>
+            </div>
+
+            <div>
+                <strong>{{ followers_count }}</strong>
+                <span>Followers</span>
+            </div>
+
+            <div>
+                <strong>{{ following_count }}</strong>
+                <span>Following</span>
+            </div>
+
+        </div>
+
+
+        {% if user.is_authenticated %}
+
+            {% if user == profile_user %}
+
+                <a
+                    href="{% url 'edit_profile' %}"
+                    class="primary-btn"
+                >
+                    Edit Profile
+                </a>
+
+            {% else %}
+
+                <form
+                    method="POST"
+                    action="{% url 'follow_user' profile_user.username %}"
+                >
+
+                    {% csrf_token %}
+
+                    {% if is_following %}
+
+                        <button
+                            type="submit"
+                            class="secondary-btn"
+                        >
+                            Unfollow
+                        </button>
+
+                    {% else %}
+
+                        <button
+                            type="submit"
+                            class="primary-btn"
+                        >
+                            Follow
+                        </button>
+
+                    {% endif %}
+
+                </form>
+
+            {% endif %}
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="profile-posts">
+
+        <h2>
+            {{ profile_user.username }}'s Posts
+        </h2>
+
+
+        {% for post in posts %}
+
+            <article class="post-card">
+
+                <div class="post-header">
+
+                    <strong>
+                        @{{ post.author.username }}
+                    </strong>
+
+                    <small>
+                        {{ post.created_at|date:"d M Y, h:i A" }}
+                    </small>
+
+                </div>
+
+
+                <p class="post-content">
+                    {{ post.content }}
+                </p>
+
+
+                {% if post.image_url %}
+
+                    <img
+                        src="{{ post.image_url }}"
+                        class="post-image"
+                        alt="Post image"
+                    >
+
+                {% endif %}
+
+
+                <div class="post-actions">
+
+                    ❤️ {{ post.likes.count }} Likes
+
+                </div>
+
+            </article>
+
+        {% empty %}
+
+            <div class="empty">
+
+                <h3>No posts yet</h3>
+
+                <p>
+                    This user has not created any posts.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </section>
+
+</main>
+
+
+<script src="{% static 'js/script.js' %}"></script>
+
+</body>
+</html>

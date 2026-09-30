@@ -1,0 +1,323 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Connectly - Social Media</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        Connectly
+    </div>
+
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' user.username %}">
+                Profile
+            </a>
+
+            <a href="{% url 'logout' %}">
+                Logout
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}">
+                Login
+            </a>
+
+            <a href="{% url 'register' %}">
+                Register
+            </a>
+        {% endif %}
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    {% if messages %}
+        <div class="messages">
+
+            {% for message in messages %}
+                <div class="message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+        </div>
+    {% endif %}
+
+
+    {% if user.is_authenticated %}
+
+    <section class="welcome">
+
+        <h1>
+            Welcome, {{ user.username }} 👋
+        </h1>
+
+        <p>
+            Share your thoughts and connect with people.
+        </p>
+
+    </section>
+
+
+    <section class="create-post">
+
+        <h2>Create a Post</h2>
+
+        <form method="POST" action="{% url 'create_post' %}">
+
+            {% csrf_token %}
+
+            <textarea
+                name="content"
+                placeholder="What's on your mind?"
+                maxlength="1000"
+                required
+            ></textarea>
+
+            <input
+                type="url"
+                name="image_url"
+                placeholder="Image URL (optional)"
+            >
+
+            <button type="submit">
+                Post
+            </button>
+
+        </form>
+
+    </section>
+
+    {% endif %}
+
+
+    <div class="content-layout">
+
+        <section class="feed">
+
+            <h2>Latest Posts</h2>
+
+            {% for post in posts %}
+
+            <article class="post-card">
+
+                <div class="post-header">
+
+                    <div>
+
+                        <a
+                            class="username"
+                            href="{% url 'profile' post.author.username %}"
+                        >
+                            @{{ post.author.username }}
+                        </a>
+
+                        <small>
+                            {{ post.created_at|date:"d M Y, h:i A" }}
+                        </small>
+
+                    </div>
+
+                    {% if user == post.author %}
+
+                    <a
+                        class="delete-btn"
+                        href="{% url 'delete_post' post.id %}"
+                        onclick="return confirm('Delete this post?')"
+                    >
+                        Delete
+                    </a>
+
+                    {% endif %}
+
+                </div>
+
+
+                <p class="post-content">
+                    {{ post.content }}
+                </p>
+
+
+                {% if post.image_url %}
+
+                <img
+                    src="{{ post.image_url }}"
+                    class="post-image"
+                    alt="Post image"
+                >
+
+                {% endif %}
+
+
+                <div class="post-actions">
+
+                    <form
+                        method="POST"
+                        action="{% url 'like_post' post.id %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <button type="submit" class="action-btn">
+
+                            ❤️
+
+                            {{ post.likes.count }}
+
+                            {% if post.likes.count == 1 %}
+                                Like
+                            {% else %}
+                                Likes
+                            {% endif %}
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <div class="comments">
+
+                    <h3>
+                        Comments ({{ post.comments.count }})
+                    </h3>
+
+
+                    {% for comment in post.comments.all %}
+
+                    <div class="comment">
+
+                        <strong>
+                            @{{ comment.author.username }}
+                        </strong>
+
+                        <span>
+                            {{ comment.text }}
+                        </span>
+
+                    </div>
+
+                    {% empty %}
+
+                    <p class="no-comments">
+                        No comments yet.
+                    </p>
+
+                    {% endfor %}
+
+
+                    {% if user.is_authenticated %}
+
+                    <form
+                        method="POST"
+                        action="{% url 'comment_post' post.id %}"
+                        class="comment-form"
+                    >
+
+                        {% csrf_token %}
+
+                        <input
+                            type="text"
+                            name="text"
+                            placeholder="Write a comment..."
+                            maxlength="500"
+                            required
+                        >
+
+                        <button type="submit">
+                            Comment
+                        </button>
+
+                    </form>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="empty">
+
+                <h3>No posts yet</h3>
+
+                <p>
+                    Be the first person to create a post!
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </section>
+
+
+        <aside class="sidebar">
+
+            <h2>People</h2>
+
+            {% for person in users %}
+
+            <div class="person">
+
+                <div>
+
+                    <a
+                        href="{% url 'profile' person.username %}"
+                    >
+                        <strong>
+                            @{{ person.username }}
+                        </strong>
+                    </a>
+
+                    <small>
+                        {{ person.posts.count }} posts
+                    </small>
+
+                </div>
+
+                <a
+                    class="view-btn"
+                    href="{% url 'profile' person.username %}"
+                >
+                    View
+                </a>
+
+            </div>
+
+            {% empty %}
+
+            <p>
+                No users yet.
+            </p>
+
+            {% endfor %}
+
+        </aside>
+
+    </div>
+
+</main>
+
+
+<script src="{% static 'js/script.js' %}"></script>
+
+</body>
+</html>
